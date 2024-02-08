@@ -6,10 +6,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import * as request from 'supertest';
 import { AuthModule } from '../src/auth/auth.module';
 import { AuthService } from '../src/auth/auth.service';
+import { TokensResponseDto } from '../src/auth/dto';
 import { LocalAuthGuard } from '../src/auth/guards';
 import { JwtConfigService, TypeOrmConfigService } from '../src/common/services';
 
-const tokens = {
+const tokens: TokensResponseDto = {
   accessToken: 'at',
   refreshToken: 'rt',
 };

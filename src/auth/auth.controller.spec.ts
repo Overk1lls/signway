@@ -55,8 +55,15 @@ describe('AuthController', () => {
   describe('login()', () => {
     it('should return JWT tokens', async () => {
       jest.spyOn(authService, 'login').mockResolvedValue({
-        accessToken: 'test',
-        refreshToken: 'test',
+        user: {
+          id: 1,
+          username: 'test',
+          email: 'test',
+        },
+        tokens: {
+          accessToken: 'test',
+          refreshToken: 'test',
+        },
       });
 
       const result = await authController.login({
@@ -64,8 +71,8 @@ describe('AuthController', () => {
         password: 'test',
       });
 
-      expect(result.accessToken).toBeDefined();
-      expect(result.refreshToken).toBeDefined();
+      expect(result.tokens).toBeDefined();
+      expect(result.user).toBeDefined();
     });
   });
 });

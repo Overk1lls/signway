@@ -69,8 +69,8 @@ describe('AuthService', () => {
         password: 'test',
       });
 
-      expect(result.accessToken).toBeDefined();
-      expect(result.refreshToken).toBeDefined();
+      expect(result.user).toBeDefined();
+      expect(result.tokens).toBeDefined();
     });
   });
 });
