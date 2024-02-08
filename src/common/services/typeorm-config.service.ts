@@ -10,9 +10,10 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
     return {
       type: 'postgres',
       url: this.configService.getOrThrow<string>('DATABASE_URL'),
-      synchronize: false,
-      logging: process.env.NODE_ENV === 'production' ? ['error'] : 'all',
+      synchronize: true,
+      logging: ['warn'],
       autoLoadEntities: true,
+      entities: ['dist/**/*.entity.{ts,js}'],
     };
   }
 }
