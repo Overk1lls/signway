@@ -6,13 +6,14 @@ import { TypeOrmModuleOptions, TypeOrmOptionsFactory } from '@nestjs/typeorm';
 export class TypeOrmConfigService implements TypeOrmOptionsFactory {
   constructor(private readonly configService: ConfigService) {}
 
-  createTypeOrmOptions(connectionName?: string): TypeOrmModuleOptions | Promise<TypeOrmModuleOptions> {
+  createTypeOrmOptions(): TypeOrmModuleOptions | Promise<TypeOrmModuleOptions> {
     return {
       type: 'postgres',
       url: this.configService.getOrThrow<string>('DATABASE_URL'),
-      synchronize: false,
-      logging: process.env.NODE_ENV === 'production' ? ['error'] : 'all',
+      synchronize: true,
+      logging: ['warn'],
       autoLoadEntities: true,
+      entities: ['dist/**/*.entity.{ts,js}'],
     };
   }
 }
