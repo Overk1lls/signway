@@ -1,0 +1,93 @@
+version: '3.9'
+services:
+  postgres:
+    container_name: postgres
+    image: postgres:15
+    command:
+      - "postgres"
+      - "-c"
+      - "max_connections=50"
+      - "-c"
+      - "shared_buffers=1GB"
+      - "-c"
+      - "effective_cache_size=4GB"
+      - "-c"
+      - "work_mem=16MB"
+      - "-c"
+      - "maintenance_work_mem=512MB"
+      - "-c"
+      - "random_page_cost=1.1"
+      - "-c"
+      - "temp_file_limit=10GB"
+      - "-c"
+      - "log_min_duration_statement=200ms"
+      - "-c"
+      - "idle_in_transaction_session_timeout=10s"
+      - "-c"
+      - "lock_timeout=1s"
+      - "-c"
+      - "statement_timeout=60s"
+      - "-c"
+      - "shared_preload_libraries=pg_stat_statements"
+      - "-c"
+      - "pg_stat_statements.max=10000"
+      - "-c"
+      - "pg_stat_statements.track=all"
+    environment:
+      - POSTGRES_DB=signway
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=admin
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - ~/Docker/:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d signway"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4:6.15
+    depends_on:
+      - postgres
+    user: root
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=default@gmail.com
+      - PGADMIN_DEFAULT_PASSWORD=admin
+    volumes:
+      - ~/Docker/pgadmin:/var/lib/pgadmin
+    ports:
+      - 5050:80
+    restart: unless-stopped
+    networks:
+      - app-network
+    
+  redis:
+    image: redis:6.2-alpine
+    restart: unless-stopped
+    ports:
+      - 6379:6379
+    command: --loglevel warning
+
+  # nest:
+  #   build: .
+  #   restart: unless-stopped
+  #   depends_on:
+  #     - postgres
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     - NODE_ENV=production
+  #   networks:
+  #     - app-network
+
+networks:
+  app-network:
+    driver: bridge
