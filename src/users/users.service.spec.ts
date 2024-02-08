@@ -1,5 +1,10 @@
-import { ConflictException, NotFoundException, UnauthorizedException } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { RedisModule, getRedisConnectionToken } from '@nestjs-modules/ioredis';
+import {
+  ConflictException,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import { TypeOrmModule, getRepositoryToken } from '@nestjs/typeorm';
 import { hashSync } from 'bcrypt';
@@ -35,6 +40,14 @@ describe('UsersService', () => {
           isGlobal: true,
           envFilePath: '.env',
         }),
+        RedisModule.forRootAsync({
+          useFactory: (configService: ConfigService) => ({
+            type: 'single',
+            url: configService.get<string>('REDIS_URL'),
+          }),
+          imports: [ConfigModule],
+          inject: [ConfigService],
+        }),
       ],
       providers: [
         UsersService,
@@ -42,16 +55,27 @@ describe('UsersService', () => {
           provide: getRepositoryToken(UserEntity),
           useClass: Repository,
         },
+        {
+          provide: getRedisConnectionToken(),
+          useValue: {
+            set: jest.fn(),
+            get: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
     usersService = module.get<UsersService>(UsersService);
-    usersEntityRepository = module.get<Repository<UserEntity>>(getRepositoryToken(UserEntity));
+    usersEntityRepository = module.get<Repository<UserEntity>>(
+      getRepositoryToken(UserEntity),
+    );
   });
 
   describe('create()', () => {
     it('should create a user', async () => {
-      jest.spyOn(usersEntityRepository, 'findOneBy').mockResolvedValueOnce(undefined);
+      jest
+        .spyOn(usersEntityRepository, 'findOneBy')
+        .mockResolvedValueOnce(undefined);
       jest.spyOn(usersEntityRepository, 'save').mockResolvedValueOnce(user);
 
       const result = await usersService.create({
@@ -69,15 +93,21 @@ describe('UsersService', () => {
     });
 
     it('should throw an error if user already exists', () => {
-      jest.spyOn(usersEntityRepository, 'findOneBy').mockResolvedValueOnce(user);
+      jest
+        .spyOn(usersEntityRepository, 'findOneBy')
+        .mockResolvedValueOnce(user);
 
-      expect(() => usersService.create({ ...user, password: '123' })).rejects.toThrowError(ConflictException);
+      expect(() =>
+        usersService.create({ ...user, password: '123' }),
+      ).rejects.toThrowError(ConflictException);
     });
   });
 
   describe('findUserById()', () => {
     it('should return a user', async () => {
-      jest.spyOn(usersEntityRepository, 'findOneBy').mockResolvedValueOnce(user);
+      jest
+        .spyOn(usersEntityRepository, 'findOneBy')
+        .mockResolvedValueOnce(user);
 
       const result = await usersService.findUserById(user.id);
 
@@ -89,15 +119,21 @@ describe('UsersService', () => {
     });
 
     it('should throw the NotFound exception', () => {
-      jest.spyOn(usersEntityRepository, 'findOneBy').mockResolvedValueOnce(undefined);
+      jest
+        .spyOn(usersEntityRepository, 'findOneBy')
+        .mockResolvedValueOnce(undefined);
 
-      expect(() => usersService.findUserById(user.id)).rejects.toThrowError(NotFoundException);
+      expect(() => usersService.findUserById(user.id)).rejects.toThrowError(
+        NotFoundException,
+      );
     });
   });
 
   describe('validateUser()', () => {
     it('should successfully validate', async () => {
-      jest.spyOn(usersEntityRepository, 'findOneBy').mockResolvedValueOnce(user);
+      jest
+        .spyOn(usersEntityRepository, 'findOneBy')
+        .mockResolvedValueOnce(user);
 
       const result = await usersService.validateUser({
         password,
@@ -112,15 +148,23 @@ describe('UsersService', () => {
     });
 
     it('should throw the NotFound exception', () => {
-      jest.spyOn(usersEntityRepository, 'findOneBy').mockResolvedValueOnce(undefined);
+      jest
+        .spyOn(usersEntityRepository, 'findOneBy')
+        .mockResolvedValueOnce(undefined);
 
-      expect(() => usersService.validateUser({ password, username: '123' })).rejects.toThrowError(NotFoundException);
+      expect(() =>
+        usersService.validateUser({ password, username: '123' }),
+      ).rejects.toThrowError(NotFoundException);
     });
 
     it('should throw the Unauthorized exception', () => {
-      jest.spyOn(usersEntityRepository, 'findOneBy').mockResolvedValueOnce(user);
+      jest
+        .spyOn(usersEntityRepository, 'findOneBy')
+        .mockResolvedValueOnce(user);
 
-      expect(() => usersService.validateUser({ password: '123', username: '123' })).rejects.toThrowError(UnauthorizedException);
+      expect(() =>
+        usersService.validateUser({ password: '123', username: '123' }),
+      ).rejects.toThrowError(UnauthorizedException);
     });
   });
 });

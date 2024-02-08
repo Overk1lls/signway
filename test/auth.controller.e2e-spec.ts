@@ -1,5 +1,6 @@
+import { RedisModule } from '@nestjs-modules/ioredis';
 import { CanActivate, INestApplication } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -38,6 +39,14 @@ describe('AuthController', () => {
         }),
         TypeOrmModule.forRootAsync({
           useClass: TypeOrmConfigService,
+        }),
+        RedisModule.forRootAsync({
+          useFactory: (configService: ConfigService) => ({
+            type: 'single',
+            url: configService.get<string>('REDIS_URL'),
+          }),
+          imports: [ConfigModule],
+          inject: [ConfigService],
         }),
       ],
     })

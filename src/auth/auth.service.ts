@@ -28,7 +28,10 @@ export class AuthService {
     return await this.generateTokens(user.id);
   }
 
-  private async generateTokens(userId: string | number, scopes?: string[]): Promise<TokensResponseDto> {
+  private async generateTokens(
+    userId: string | number,
+    scopes?: string[],
+  ): Promise<TokensResponseDto> {
     return {
       accessToken: await this.jwtService.signAsync({
         sub: userId,

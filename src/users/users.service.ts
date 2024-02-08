@@ -1,7 +1,14 @@
-import { ConflictException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { InjectRedis } from '@nestjs-modules/ioredis';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { compare, hash } from 'bcrypt';
+import { Redis } from 'ioredis';
 import { Repository } from 'typeorm';
 import { UserAuthDto, UserCreateDto, UserResponseDto } from './dto';
 import { UserEntity } from './entities';
@@ -13,6 +20,9 @@ export class UsersService {
 
     @InjectRepository(UserEntity)
     private readonly userEntityRepository: Repository<UserEntity>,
+
+    @InjectRedis()
+    private readonly redis: Redis,
   ) {}
 
   async create(dto: UserCreateDto) {
@@ -30,18 +40,43 @@ export class UsersService {
     return this.formUserResponse(newUser);
   }
 
-  async findUserById(id: number) {
+  async findUserById(id: number): Promise<UserResponseDto> {
+    const cachedKey = this.getCachedKey(id);
+    const cachedUser = await this.redis.get(cachedKey);
+    if (cachedUser) {
+      return JSON.parse(cachedUser);
+    }
+
     const user = await this.userEntityRepository.findOneBy({ id });
     if (!user) {
       throw new NotFoundException(`User with id '${id}' does not exist`);
     }
-    return this.formUserResponse(user);
+
+    const response = this.formUserResponse(user);
+
+    await this.cacheUser(
+      cachedKey,
+      response,
+      this.configService.get('REDIS_TTL', 300),
+    );
+
+    return response;
   }
 
-  async validateUser(dto: UserAuthDto) {
-    const user = await this.userEntityRepository.findOneBy({ username: dto.username });
+  async validateUser(dto: UserAuthDto): Promise<UserResponseDto> {
+    const cachedKey = this.getCachedKey(dto.username);
+    const cachedUser = await this.redis.get(cachedKey);
+    if (cachedUser) {
+      return JSON.parse(cachedUser);
+    }
+
+    const user = await this.userEntityRepository.findOneBy({
+      username: dto.username,
+    });
     if (!user) {
-      throw new NotFoundException(`User with such username '${dto.username}' does not exist`);
+      throw new NotFoundException(
+        `User with such username '${dto.username}' does not exist`,
+      );
     }
 
     const isPasswordValid = await compare(dto.password, user.hash);
@@ -49,7 +84,15 @@ export class UsersService {
       throw new UnauthorizedException('Credentials are invalid');
     }
 
-    return this.formUserResponse(user);
+    const response = this.formUserResponse(user);
+
+    await this.cacheUser(
+      cachedKey,
+      response,
+      this.configService.get('REDIS_TTL', 300),
+    );
+
+    return response;
   }
 
   private async hashPassword(password: string) {
@@ -64,5 +107,13 @@ export class UsersService {
       email: user.email,
       name: user.name,
     };
+  }
+
+  private async cacheUser(key: string, user: UserResponseDto, ttl = 300) {
+    return await this.redis.set(key, JSON.stringify(user), 'EX', ttl);
+  }
+
+  private getCachedKey(idOrUsername: string | number): string {
+    return `user:${idOrUsername}`;
   }
 }

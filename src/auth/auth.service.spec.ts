@@ -1,4 +1,5 @@
-import { ConfigModule } from '@nestjs/config';
+import { RedisModule } from '@nestjs-modules/ioredis';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -25,6 +26,14 @@ describe('AuthService', () => {
         ConfigModule.forRoot({
           isGlobal: true,
           envFilePath: '.env',
+        }),
+        RedisModule.forRootAsync({
+          useFactory: (configService: ConfigService) => ({
+            type: 'single',
+            url: configService.get<string>('REDIS_URL'),
+          }),
+          imports: [ConfigModule],
+          inject: [ConfigService],
         }),
       ],
       controllers: [AuthController],
