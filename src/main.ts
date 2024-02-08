@@ -6,11 +6,13 @@ import { ValidationPipe } from '@nestjs/common';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  app.useGlobalPipes(new ValidationPipe({
-    whitelist: true,
-    transform: true,
-    disableErrorMessages: process.env.NODE_ENV === 'production',
-  }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+      disableErrorMessages: process.env.NODE_ENV === 'production',
+    }),
+  );
 
   const openApi = new DocumentBuilder()
     .setTitle('UserWay Authentication Service')
@@ -19,9 +21,9 @@ async function bootstrap() {
     .addTag('auth', 'Authentication')
     .addTag('users', 'Users')
     .addBearerAuth()
-    .build()
+    .build();
   const swagger = SwaggerModule.createDocument(app, openApi);
-  
+
   SwaggerModule.setup('/docs', app, swagger);
 
   await app.listen(3000);

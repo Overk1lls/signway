@@ -11,7 +11,7 @@ import { UsersService } from './users.service';
 describe('UsersService', () => {
   let usersService: UsersService;
   let usersEntityRepository: Repository<UserEntity>;
-  
+
   const password = '12345test';
   const saltOrRounds = 10;
   const decryptedPw = hashSync(password, saltOrRounds);

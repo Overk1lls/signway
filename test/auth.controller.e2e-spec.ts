@@ -38,7 +38,7 @@ describe('AuthController', () => {
         }),
         TypeOrmModule.forRootAsync({
           useClass: TypeOrmConfigService,
-        })
+        }),
       ],
     })
       .overrideProvider(AuthService)

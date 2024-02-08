@@ -13,7 +13,7 @@ export class UsersService {
 
     @InjectRepository(UserEntity)
     private readonly userEntityRepository: Repository<UserEntity>,
-  ) { }
+  ) {}
 
   async create(dto: UserCreateDto) {
     const user = await this.userEntityRepository.findOneBy([
@@ -26,7 +26,7 @@ export class UsersService {
 
     const hash = await this.hashPassword(dto.password);
     const newUser = await this.userEntityRepository.save({ ...dto, hash });
-    
+
     return this.formUserResponse(newUser);
   }
 

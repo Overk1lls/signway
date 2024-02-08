@@ -10,7 +10,7 @@ export const JWT_EXPIRES_IN = '24h';
 @Injectable()
 export class JwtConfigService implements JwtOptionsFactory {
   constructor(private readonly configService: ConfigService) {}
-  
+
   createJwtOptions(): JwtModuleOptions | Promise<JwtModuleOptions> {
     return {
       global: true,

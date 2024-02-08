@@ -13,7 +13,7 @@ export class AuthService {
     private readonly configService: ConfigService,
     private readonly jwtService: JwtService,
     private readonly usersService: UsersService,
-  ) { }
+  ) {}
 
   async login(dto: UserAuthDto): Promise<AuthResponseDto> {
     const user = await this.usersService.validateUser(dto);

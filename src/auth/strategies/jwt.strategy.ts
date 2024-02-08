@@ -2,7 +2,7 @@ import { ForbiddenException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { JWT_ALGORITHM, JWT_AUDIENCE, JWT_EXPIRES_IN, JWT_ISSUER } from '../../common/services';
+import { JWT_ALGORITHM, JWT_AUDIENCE, JWT_ISSUER } from '../../common/services';
 import { UsersService } from '../../users/users.service';
 import { JwtBearerScope, JwtPayload } from '../interfaces';
 
@@ -14,12 +14,15 @@ export const fullUserScopes = Object.values(JwtBearerScope).filter((s) => s.star
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   constructor(
     configService: ConfigService,
-    private readonly usersService: UsersService,  
+    private readonly usersService: UsersService,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
       secretOrKey: configService.getOrThrow<string>('JWT_SECRET_ACCESS'),
+      issuer: JWT_ISSUER,
+      audience: JWT_AUDIENCE,
+      algorithms: [JWT_ALGORITHM],
     });
   }
 

@@ -10,7 +10,6 @@ import { AuthService } from './auth.service';
 
 describe('AuthService', () => {
   let authController: AuthController;
-  let authService: AuthService;
   let usersService: UsersService;
 
   beforeEach(async () => {
@@ -33,7 +32,6 @@ describe('AuthService', () => {
     }).compile();
 
     authController = module.get<AuthController>(AuthController);
-    authService = module.get<AuthService>(AuthService);
     usersService = module.get<UsersService>(UsersService);
   });
 
