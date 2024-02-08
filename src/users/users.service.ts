@@ -30,14 +30,6 @@ export class UsersService {
     return this.formUserResponse(newUser);
   }
 
-  async findByUsername(username: string) {
-    const user = await this.userEntityRepository.findOneBy({ username });
-    if (!user) {
-      throw new NotFoundException(`User with username '${username}' does not exist`);
-    }
-    return this.formUserResponse(user);
-  }
-
   async findUserById(id: number) {
     const user = await this.userEntityRepository.findOneBy({ id });
     if (!user) {

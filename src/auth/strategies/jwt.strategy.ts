@@ -29,10 +29,5 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     }
 
     return await this.usersService.findUserById(+payload.sub);
-    return {
-      userId: payload.sub,
-      jti: payload.jti,
-      scopes: payload.scopes,
-    };
   }
 }
